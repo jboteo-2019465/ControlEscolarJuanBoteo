@@ -42,11 +42,25 @@ export const assignCourse = async (req, res) => {
         let decodeToken = jwt.verify(token, process.env.JWT_SECRET)
         let id = decodeToken.id
 
+       
+
         //Verificar si el curso existe
-        const course = await Course.findOne({ _id: req.params.courseId})
+        let course = await Course.findOne({ _id: req.params.courseId})
         if (!course) {
             return res.status(404).send({ message: 'Curso no encontrado' })
         }
+
+        //Verificar si el estudiante ya esta asignado a 3 cursos
+        let studentCoursesCount = await Course.countDocuments({ students: id })
+        if (studentCoursesCount >= 3) {
+            return res.status(400).send({ message: 'El estudiante ya está asignado a 3 cursos' })
+        }
+
+        //Verificar si el estudiante ya esta asignado al curso
+        if (course.students.includes(id)) {
+            return res.status(400).send({ message: 'El estudiante ya está asignado a este curso' })
+        }
+        
         //Asignacion
         course.students = id;
 
